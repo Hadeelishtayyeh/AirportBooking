@@ -1,13 +1,9 @@
-namespace AirportBookingSystem.Models{
-
-public enum BookingClass{
-Economy,
-Business,
-FirstClass
-
-}
-
-
-
-    
+namespace AirportBookingSystem.Models
+{
+    public enum BookingClass
+    {
+        Economy,
+        Business,
+        FirstClass
+    }
 }

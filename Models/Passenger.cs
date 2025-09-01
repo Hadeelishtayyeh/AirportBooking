@@ -1,8 +1,8 @@
-namespace AirportBookingSystem.Models{
-
-public class Passenger
+namespace AirportBookingSystem.Models
 {
-    public string? Name { get; set; }
-    public string? PassportNumber { get; set; }
-}
+    public class Passenger
+    {
+        public string? Name { get; set; }
+        public string? PassportNumber { get; set; }
+    }
 }
