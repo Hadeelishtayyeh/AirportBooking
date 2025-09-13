@@ -1,6 +1,6 @@
-using System;
-using System.Collections.Generic;
 using AirportBookingSystem.Models;
+using AirportBookingSystem.Repositories;
+using AirportBookingSystem.Services;
 
 Console.WriteLine("Welcome to the Airport Ticket Booking System");
 
@@ -8,7 +8,9 @@ Console.WriteLine("Are you a:");
 Console.WriteLine("1. Passenger");
 Console.WriteLine("2. Manager");
 
-switch (Console.ReadLine())
+string? roleInput = Console.ReadLine();
+
+switch (roleInput)
 {
     case "1":
         await PassengerMenuAsync();
@@ -17,17 +19,17 @@ switch (Console.ReadLine())
         await ManagerMenuAsync();
         break;
     default:
-        Console.WriteLine("Invalid choice. Try again.");
+        Console.WriteLine("Invalid choice.");
         break;
 }
 
 async Task PassengerMenuAsync()
 {
     Console.Write("Enter your name: ");
-    string name = Console.ReadLine();
+    string name = Console.ReadLine() ?? string.Empty;
 
     Console.Write("Enter your Passport Number: ");
-    string passport = Console.ReadLine();
+    string passport = Console.ReadLine() ?? string.Empty;
 
     var passenger = new Passenger
     {
@@ -35,8 +37,10 @@ async Task PassengerMenuAsync()
         PassportNumber = passport
     };
 
-    var manager = new Manager();
-    var flights = manager.LoadFlights();
+    var flightRepo = new FlightRepository();
+    var flightService = new FlightService(flightRepo);
+
+    var flights = flightService.GetAllFlights();
 
     if (flights.Count == 0)
     {
@@ -55,7 +59,7 @@ async Task PassengerMenuAsync()
     }
 
     Console.Write("\nEnter Flight ID to book: ");
-    string flightId = Console.ReadLine();
+    string flightId = Console.ReadLine() ?? string.Empty;
     var selectedFlight = flights.Find(f => f.FlightId == flightId);
 
     if (selectedFlight == null)
@@ -75,44 +79,55 @@ async Task PassengerMenuAsync()
 
     var booking = new Booking
     {
-        BookingId = Guid.NewGuid().ToString(),
         Passenger = passenger,
+        PassengerName = passenger.Name,
+        PassportNumber = passenger.PassportNumber,
         Flight = selectedFlight,
+        FlightId = selectedFlight.FlightId,
         BookingClass = bookingClass,
         BookingDate = DateTime.Now
     };
 
     Console.WriteLine("\nBooking Successful!");
     Console.WriteLine($"Booking ID: {booking.BookingId}");
-    Console.WriteLine($"Passenger: {passenger.Name}");
+    Console.WriteLine($"Passenger: {booking.PassengerName}");
     Console.WriteLine($"Flight: {selectedFlight.FlightId} | Class: {bookingClass}");
 }
 
 async Task ManagerMenuAsync()
 {
-    var manager = new Manager();
+    var flightRepo = new FlightRepository();
+    var flightService = new FlightService(flightRepo);
 
     while (true)
     {
         Console.WriteLine("\nManager Menu:");
-        Console.WriteLine("1. Import Flights from CSV");
+        Console.WriteLine("1. Import Flights ");
         Console.WriteLine("2. View All Flights");
         Console.WriteLine("3. Add Flight Manually");
         Console.WriteLine("4. Return to Main Menu");
 
         Console.Write("Enter your choice: ");
-        string choice = Console.ReadLine();
+        string? choice = Console.ReadLine();
 
         switch (choice)
         {
             case "1":
                 Console.Write("Enter CSV file path: ");
-                string path = Console.ReadLine();
-                manager.ImportFlightsFromCSV(path);
+                string? path = Console.ReadLine();
+                try
+                {
+                    await flightService.ImportFlightsFromCsvAsync(path ?? "");
+                    Console.WriteLine("Flights imported successfully.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error importing: {ex.Message}");
+                }
                 break;
 
             case "2":
-                var flights = manager.LoadFlights();
+                var flights = flightService.GetAllFlights();
                 if (flights.Count == 0)
                 {
                     Console.WriteLine("No flights available.");
@@ -135,38 +150,35 @@ async Task ManagerMenuAsync()
                 var newFlight = new Flight();
 
                 Console.Write("Departure Country: ");
-                newFlight.DepartureCountry = Console.ReadLine();
+                newFlight.DepartureCountry = Console.ReadLine() ?? "";
 
                 Console.Write("Destination Country: ");
-                newFlight.DestinationCountry = Console.ReadLine();
+                newFlight.DestinationCountry = Console.ReadLine() ?? "";
 
                 Console.Write("Departure Airport: ");
-                newFlight.DepartureAirport = Console.ReadLine();
+                newFlight.DepartureAirport = Console.ReadLine() ?? "";
 
                 Console.Write("Arrival Airport: ");
-                newFlight.ArrivalAirport = Console.ReadLine();
+                newFlight.ArrivalAirport = Console.ReadLine() ?? "";
 
                 Console.Write("Departure Date (yyyy-MM-dd): ");
-                newFlight.DepartureDate = DateTime.Parse(Console.ReadLine());
+                newFlight.DepartureDate = DateTime.Parse(Console.ReadLine() ?? "");
 
                 Console.Write("Economy Price: ");
-                newFlight.PriceEconomy = decimal.Parse(Console.ReadLine());
+                newFlight.PriceEconomy = decimal.Parse(Console.ReadLine() ?? "0");
 
                 Console.Write("Business Price: ");
-                newFlight.PriceBusiness = decimal.Parse(Console.ReadLine());
+                newFlight.PriceBusiness = decimal.Parse(Console.ReadLine() ?? "0");
 
                 Console.Write("First Class Price: ");
-                newFlight.PriceFirstClass = decimal.Parse(Console.ReadLine());
+                newFlight.PriceFirstClass = decimal.Parse(Console.ReadLine() ?? "0");
 
-                newFlight.FlightId = Guid.NewGuid().ToString();
-
-                manager.AddFlight(newFlight);
+                flightService.AddFlight(newFlight);
 
                 Console.WriteLine("Flight added successfully!");
                 break;
 
             case "4":
-                // Return to main menu
                 return;
 
             default:

@@ -2,8 +2,9 @@ namespace AirportBookingSystem.Models
 {
     public enum BookingClass
     {
-        Economy,
-        Business,
-        FirstClass
+        None =0,
+        Economy =1,
+        Business =2,
+        FirstClass =3
     }
 }
