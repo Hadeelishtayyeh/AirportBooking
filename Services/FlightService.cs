@@ -28,6 +28,35 @@ namespace AirportBookingSystem.Services
             _flightRepository.SaveFlights(flights);
         }
 
+        public void UpdateFlight(string flightId, Flight updatedFlight)
+        {
+            var flights = _flightRepository.LoadFlights();
+            var flight = flights.Find(f => f.FlightId == flightId);
+
+            if (flight != null)
+            {
+                flight.DepartureCountry = updatedFlight.DepartureCountry;
+                flight.DestinationCountry = updatedFlight.DestinationCountry;
+                flight.DepartureDate = updatedFlight.DepartureDate;
+                flight.DepartureAirport = updatedFlight.DepartureAirport;
+                flight.ArrivalAirport = updatedFlight.ArrivalAirport;
+                flight.PriceEconomy = updatedFlight.PriceEconomy;
+                flight.PriceBusiness = updatedFlight.PriceBusiness;
+                flight.PriceFirstClass = updatedFlight.PriceFirstClass;
+
+                _flightRepository.SaveFlights(flights);
+            }
+        }
+
+        public void DeleteFlight(string? flightId)
+        {
+            if (string.IsNullOrEmpty(flightId)) return;
+
+            var flights = _flightRepository.LoadFlights();
+            flights.RemoveAll(f => f.FlightId == flightId);
+            _flightRepository.SaveFlights(flights);
+        }
+
         public async Task ImportFlightsFromCsvAsync(string filePath)
         {
             if (!File.Exists(filePath))
@@ -45,17 +74,27 @@ namespace AirportBookingSystem.Services
 
             foreach (var record in records)
             {
+                if (!DateTime.TryParse(record.DepartureDate, out DateTime departureDate))
+                {
+                    // تخطي السجل اذا تاريخ الرحلة غير صالح
+                    continue;
+                }
+
+                if (!decimal.TryParse(record.PriceEconomy, out decimal priceEconomy)) priceEconomy = 0;
+                if (!decimal.TryParse(record.PriceBusiness, out decimal priceBusiness)) priceBusiness = 0;
+                if (!decimal.TryParse(record.PriceFirstClass, out decimal priceFirstClass)) priceFirstClass = 0;
+
                 var flight = new Flight
                 {
                     FlightId = Guid.NewGuid().ToString(),
                     DepartureCountry = record.DepartureCountry,
                     DestinationCountry = record.DestinationCountry,
-                    DepartureDate = DateTime.Parse(record.DepartureDate),
+                    DepartureDate = departureDate,
                     DepartureAirport = record.DepartureAirport,
                     ArrivalAirport = record.ArrivalAirport,
-                    PriceEconomy = decimal.Parse(record.PriceEconomy),
-                    PriceBusiness = decimal.Parse(record.PriceBusiness),
-                    PriceFirstClass = decimal.Parse(record.PriceFirstClass)
+                    PriceEconomy = priceEconomy,
+                    PriceBusiness = priceBusiness,
+                    PriceFirstClass = priceFirstClass
                 };
 
                 flights.Add(flight);
