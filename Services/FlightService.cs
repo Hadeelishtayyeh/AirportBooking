@@ -9,26 +9,32 @@ namespace AirportBookingSystem.Services
     public class FlightService
     {
         private readonly FlightRepository _flightRepository;
-
+        private static int _nextFlightId = 1;
         public FlightService(FlightRepository flightRepository)
         {
             _flightRepository = flightRepository;
+            var flights = _flightRepository.LoadFlights();
+            if (flights.Count > 0)
+            {
+                _nextFlightId = flights.Max(f => f.FlightId) + 1;
+            }
         }
 
         public List<Flight> GetAllFlights()
         {
             return _flightRepository.LoadFlights();
+            
         }
 
         public void AddFlight(Flight flight)
         {
             var flights = _flightRepository.LoadFlights();
-            flight.FlightId = Guid.NewGuid().ToString();
+            flight.FlightId = _nextFlightId++;
             flights.Add(flight);
             _flightRepository.SaveFlights(flights);
         }
 
-        public void UpdateFlight(string flightId, Flight updatedFlight)
+        public void UpdateFlight(int flightId, Flight updatedFlight)
         {
             var flights = _flightRepository.LoadFlights();
             var flight = flights.Find(f => f.FlightId == flightId);
@@ -48,9 +54,8 @@ namespace AirportBookingSystem.Services
             }
         }
 
-        public void DeleteFlight(string? flightId)
+        public void DeleteFlight(int flightId)
         {
-            if (string.IsNullOrEmpty(flightId)) return;
 
             var flights = _flightRepository.LoadFlights();
             flights.RemoveAll(f => f.FlightId == flightId);
@@ -76,7 +81,6 @@ namespace AirportBookingSystem.Services
             {
                 if (!DateTime.TryParse(record.DepartureDate, out DateTime departureDate))
                 {
-                    // تخطي السجل اذا تاريخ الرحلة غير صالح
                     continue;
                 }
 
@@ -86,7 +90,7 @@ namespace AirportBookingSystem.Services
 
                 var flight = new Flight
                 {
-                    FlightId = Guid.NewGuid().ToString(),
+                    FlightId = _nextFlightId++,
                     DepartureCountry = record.DepartureCountry,
                     DestinationCountry = record.DestinationCountry,
                     DepartureDate = departureDate,

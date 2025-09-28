@@ -17,11 +17,13 @@ namespace AirportBookingSystem.Services
         public void AddBooking(Booking booking)
         {
             var bookings = _repository.LoadBookings();
+            int newId = bookings.Any() ? bookings.Max(b => b.BookingId) + 1 : 1;
+            booking.BookingId = newId;
             bookings.Add(booking);
             _repository.SaveBookings(bookings);
         }
 
-        public void DeleteBooking(string bookingId)
+        public void DeleteBooking(int bookingId)
         {
             var bookings = _repository.LoadBookings();
             var b = bookings.FirstOrDefault(x => x.BookingId == bookingId);
@@ -31,5 +33,11 @@ namespace AirportBookingSystem.Services
                 _repository.SaveBookings(bookings);
             }
         }
+        public List<Booking> GetBookingsByPassportNumber(string passportNumber)
+        {    
+            var bookings = _repository.LoadBookings();
+            return bookings.FindAll(b => b.PassportNumber == passportNumber);
+        }
+
     }
 }

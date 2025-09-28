@@ -23,7 +23,6 @@ switch (roleInput)
         break;
 }
 
-// ... بداية الكود نفس الشيء
 
 async Task ManagerMenuAsync()
 {
@@ -58,7 +57,6 @@ async Task ManagerMenuAsync()
                 flightService.GetAllFlights().ForEach(f => Console.WriteLine($"{f.FlightId} | {f.DepartureCountry} -> {f.DestinationCountry}"));
                 break;
             case "2":
-                // إضافة رحلة جديدة (مثال)
                 var newFlight = new Flight();
                 Console.Write("Departure Country: ");
                 newFlight.DepartureCountry = Console.ReadLine() ?? "";
@@ -83,7 +81,12 @@ async Task ManagerMenuAsync()
 
             case "3":
                 Console.Write("Enter Flight ID to update: ");
-                var flightIdToUpdate = Console.ReadLine();
+                string? updateInput = Console.ReadLine();
+                    if (!int.TryParse(updateInput, out int flightIdToUpdate))
+                    {
+                    Console.WriteLine("Invalid Flight ID.");
+                    return;
+                    }
 
                 var flights = flightService.GetAllFlights();
                 var flightToUpdate = flights.Find(f => f.FlightId == flightIdToUpdate);
@@ -130,7 +133,14 @@ async Task ManagerMenuAsync()
 
             case "4":
                 Console.Write("Enter Flight ID to delete: ");
-                flightService.DeleteFlight(Console.ReadLine());
+                string? deleteInput = Console.ReadLine();
+
+                if (!int.TryParse(deleteInput, out int flightIdToDelete))
+                {
+                    Console.WriteLine("Invalid Flight ID.");
+                    return;
+                }
+                flightService.DeleteFlight(flightIdToDelete);
                 Console.WriteLine("Flight deleted successfully!");
                 break;
 
@@ -140,8 +150,12 @@ async Task ManagerMenuAsync()
 
             case "6":
                 Console.Write("Enter Booking ID to delete: ");
-                bookingService.DeleteBooking(Console.ReadLine());
-                Console.WriteLine("Booking deleted successfully!");
+                if (!int.TryParse(Console.ReadLine(), out int bookingToCancel))
+                {
+                Console.WriteLine("Invalid Booking ID.");
+                break;
+                }
+                bookingService.DeleteBooking(bookingToCancel);
                 break;
 
             case "7":
@@ -212,7 +226,6 @@ async Task PassengerMenuAsync()
                 Console.Write("Enter your passport number: ");
                 string passportNumber = Console.ReadLine() ?? "";
 
-                // Add passenger if not exists
                 var existingPassengers = passengerService.GetAll();
                 if (!existingPassengers.Exists(p => p.PassportNumber == passportNumber))
                 {
@@ -220,7 +233,14 @@ async Task PassengerMenuAsync()
                 }
 
                 Console.Write("Enter Flight ID to book: ");
-                string flightId = Console.ReadLine() ?? "";
+                string? input = Console.ReadLine(); 
+
+                if (!int.TryParse(input, out int flightId)) 
+                {
+                Console.WriteLine("Invalid flight ID. Please enter a valid number.");
+                    break; 
+                }
+
                 var flight = flightService.GetAllFlights().Find(f => f.FlightId == flightId);
                 if (flight == null)
                 {
@@ -258,8 +278,7 @@ async Task PassengerMenuAsync()
                 Console.Write("Enter your passport number to view bookings: ");
                 string passportSearch = Console.ReadLine() ?? "";
 
-                var bookings = bookingService.GetAll();
-                var myBookings = bookings.FindAll(b => b.PassportNumber == passportSearch);
+                var myBookings = bookingService.GetBookingsByPassportNumber(passportSearch);
 
                 if (myBookings.Count == 0)
                 {
