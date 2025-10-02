@@ -1,0 +1,43 @@
+using AirportBookingSystem.Models;
+using AirportBookingSystem.Repositories;
+
+namespace AirportBookingSystem.Services
+{
+    public class BookingService
+    {
+        private readonly BookingRepository _repository;
+
+        public BookingService(BookingRepository repository)
+        {
+            _repository = repository;
+        }
+
+        public List<Booking> GetAll() => _repository.LoadBookings();
+
+        public void AddBooking(Booking booking)
+        {
+            var bookings = _repository.LoadBookings();
+            int newId = bookings.Any() ? bookings.Max(b => b.BookingId) + 1 : 1;
+            booking.BookingId = newId;
+            bookings.Add(booking);
+            _repository.SaveBookings(bookings);
+        }
+
+        public void DeleteBooking(int bookingId)
+        {
+            var bookings = _repository.LoadBookings();
+            var b = bookings.FirstOrDefault(x => x.BookingId == bookingId);
+            if (b != null)
+            {
+                bookings.Remove(b);
+                _repository.SaveBookings(bookings);
+            }
+        }
+        public List<Booking> GetBookingsByPassportNumber(string passportNumber)
+        {    
+            var bookings = _repository.LoadBookings();
+            return bookings.FindAll(b => b.PassportNumber == passportNumber);
+        }
+
+    }
+}
